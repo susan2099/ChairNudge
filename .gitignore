@@ -10,6 +10,3 @@ __pycache__/
 *.csv
 data/
 
-# Local build of tools/replay_csv.cpp
-replay
-replay.exe
