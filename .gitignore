@@ -9,3 +9,7 @@ __pycache__/
 # Sensor logs (can contain timing of when someone sat in the chair)
 *.csv
 data/
+
+# Local build of tools/replay_csv.cpp
+replay
+replay.exe
