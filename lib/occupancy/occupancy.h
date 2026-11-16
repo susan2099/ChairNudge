@@ -14,8 +14,6 @@
 //               rolls, and the foam not fully springing back.
 //      SITTING: d < 0.2 and v is closer to the baseline than to the sitting tilt -> EMPTY.
 //
-// Plain C++ with no Arduino calls, so the same code runs on the ESP32 and in
-// tools/replay_csv.cpp on a PC.
 #pragma once
 
 #include <stdint.h>
