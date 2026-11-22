@@ -1,4 +1,5 @@
 #include "occupancy.h"
+#include "../OccupancyTimer.h"
 
 #include <math.h>
 
@@ -60,12 +61,14 @@ bool OccupancyDetector::update(float ax, float ay, float az, float gx, float gy,
       if (d > cfg_.tiltThreshold) {
         state_ = SITTING;
         for (int k = 0; k < 3; k++) sit_[k] = v[k];
+        OccupancyTimer::UserSat();
       } else {
         for (int k = 0; k < 3; k++) base_[k] = v[k];  // chair moved or foam settled
       }
     } else if (d < cfg_.tiltThreshold && d < dist(v, sit_)) {
       state_ = EMPTY;
       for (int k = 0; k < 3; k++) base_[k] = v[k];
+      OccupancyTimer::UserStood();
     }
     moved_ = false;
   }

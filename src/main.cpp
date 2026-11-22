@@ -15,6 +15,7 @@
 #include <HTTPClient.h>
 #include <Wire.h>
 #include "occupancy.h"
+#include "../lib/OccupancyTimer.h"
 #include "secrets.h"
 
 const int I2C_SDA = 21, I2C_SCL = 22;
@@ -25,6 +26,7 @@ const float ACCEL_SCALE = 9.80665f / 16384.0f;  // +/-2 g range -> m/s^2
 const float GYRO_SCALE = 1.0f / 131.0f;         // +/-250 deg/s range -> deg/s
 
 OccupancyDetector occupancy;
+OccupancyTimer occTimer;
 
 // Running sums for the current 5 second window
 double sum = 0, sumSq = 0;
@@ -116,6 +118,8 @@ void setup() {
   writeReg(0x1B, 0x00);  // gyro +/-250 deg/s
   writeReg(0x1C, 0x00);  // accel +/-2 g
   connectWiFi();
+
+  occTimer.Init(&occupancy);
 }
 
 void loop() {
