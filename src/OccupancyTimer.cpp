@@ -2,12 +2,11 @@
 
 OccupancyDetector *OccupancyTimer::detector = NULL;
 
-unsigned long OccupancyTimer::sit_begin_time = 0;
-unsigned long OccupancyTimer::stand_begin_time = 0;
+unsigned long OccupancyTimer::last_tick = millis();
 bool OccupancyTimer::sat_too_long_alarm = false;
 
-unsigned long OccupancyTimer::sit_time = DEFAULT_SIT_TIME;
-unsigned long OccupancyTimer::stand_time = DEFAULT_STAND_TIME;
+unsigned long OccupancyTimer::sit_time_limit = DEFAULT_SIT_TIME;
+unsigned long OccupancyTimer::stand_time_limit = DEFAULT_STAND_TIME;
 unsigned long OccupancyTimer::total_sit_time = 0;
 unsigned long OccupancyTimer::total_stand_time = 0;
 
@@ -46,63 +45,45 @@ void OccupancyTimer::stop_alarm(TaskHandle_t &handle, const BuzzerPattern *patte
 	}
 }
 
-void OccupancyTimer::UserSat() {
-	unsigned long now = millis();
-
-	if(sat_too_long_alarm) { /* user sat while alarm is still on, resume the buzzer */
-		total_stand_time += (now - stand_begin_time);
-		start_alarm(handle, alarm_pattern);
-	} else { /* alarm is not on */
-		sit_begin_time = now;
-	}
-}
-
-void OccupancyTimer::UserStood() {
-	unsigned long now = millis();
-
-	if(sat_too_long_alarm) { /* alarm is on, turn off the buzzer */
-		stop_alarm(handle, alarm_pattern);
-		stand_begin_time = now;
-	} else { /* alarm is not on */
-		total_sit_time += (now - sit_begin_time);
-	}
-}
-
 /* occupied() == is sitting */
 void OccupancyTimer::Tick() {
 	if(alarm_pattern != NULL) { /* cursed error handler */
 		if(detector != NULL) {
 			unsigned long now = millis();
+			unsigned long delta = now - last_tick;
+			last_tick = now;
 
-			if(sat_too_long_alarm) { /* alarm is on */
-				if( /* user stood for long enough, turn off alarm and buzzer */
-					(total_stand_time >= stand_time) || 
-					(!detector->occupied() && now - stand_begin_time + total_stand_time >= stand_time)
-				) {
+			if(detector->occupied()) { /* user is sitting */
+				total_sit_time += delta;
+				
+				if(!sat_too_long_alarm) {
+					total_stand_time = 0; /* reset the standing time if the alarm is still going. must stand for the entire time */
+
+					if(total_sit_time >= sit_time_limit) { /* turn on the alarm */
+						sat_too_long_alarm = true;
+					}
+				}
+
+				if(sat_too_long_alarm) { /* turn on the buzzer */
+					start_alarm(handle, alarm_pattern);
+				}
+			} else { /* user is standing */
+				total_stand_time += delta; /* stand time can accumulate if the alarm has not gone off (eg: stand for 1.5 minutes, then 0.5 minutes, this is sufficient to reset the sitting timer ) */
+				stop_alarm(handle, alarm_pattern);
+
+				if(total_stand_time >= stand_time_limit) { /* user stood for long enough */
 					sat_too_long_alarm = false;
 					total_sit_time = total_stand_time = 0;
-					sit_begin_time = now;
-					stop_alarm(handle, alarm_pattern);
-				}
-			} else { /* alarm is not on */
-				if( /* user sat too long, turn on alarm and buzzer */
-					(total_sit_time >= sit_time) || 
-					(detector->occupied() && now - sit_begin_time + total_sit_time >= sit_time)
-				) {
-					sat_too_long_alarm = true;
-					total_stand_time = 0;
-					stand_begin_time = now;
-
-					if(detector->occupied()) { start_alarm(handle, alarm_pattern); }
 				}
 			}
 		} else {
 			Serial.println("OccupancyTimer needs OccupancyDetector, please call init!");
 			alarm_pattern = NULL;
 		}
-	} 
+	}
 }
 
-void OccupancyTimer::Init(OccupancyDetector *_detector) {
+void OccupancyTimer::Init(OccupancyDetector *_detector, const BuzzerPattern *_pattern) {
 	detector = _detector;
+	alarm_pattern = (_pattern) ? _pattern : &ALARM_PATTERN;
 }

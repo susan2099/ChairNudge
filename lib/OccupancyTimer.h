@@ -21,12 +21,11 @@ const BuzzerPattern ALARM_PATTERN{BUZZER_PIN, 250, 250};
 class OccupancyTimer {
 private:
 	static OccupancyDetector *detector;
-	static unsigned long sit_begin_time;
-	static unsigned long stand_begin_time;
+	static unsigned long last_tick;
 	static bool sat_too_long_alarm;
 
-	static unsigned long sit_time;
-	static unsigned long stand_time;
+	static unsigned long sit_time_limit;
+	static unsigned long stand_time_limit;
 	static unsigned long total_stand_time;
 	static unsigned long total_sit_time;
 
@@ -36,9 +35,7 @@ private:
 	static void start_alarm(TaskHandle_t &, const BuzzerPattern *);
 	static void stop_alarm(TaskHandle_t &, const BuzzerPattern *);
 public:
-	static void Init(OccupancyDetector *);
-	static void UserSat();
-	static void UserStood();
+	static void Init(OccupancyDetector *, const BuzzerPattern * = NULL);
 	static void Tick();
 };
 
