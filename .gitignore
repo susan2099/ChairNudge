@@ -1,0 +1,12 @@
+.pio/
+.vscode/
+include/secrets.h
+
+# Python
+.venv/
+__pycache__/
+
+# Sensor logs (can contain timing of when someone sat in the chair)
+*.csv
+data/
+
