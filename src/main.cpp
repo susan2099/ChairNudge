@@ -153,4 +153,6 @@ void loop() {
     sum = sumSq = 0;
     count = 0;
   }
+
+  occTimer.Tick();
 }
