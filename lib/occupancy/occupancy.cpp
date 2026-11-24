@@ -1,5 +1,4 @@
 #include "occupancy.h"
-#include "../OccupancyTimer.h"
 
 #include <math.h>
 
